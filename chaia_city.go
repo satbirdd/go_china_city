@@ -5,14 +5,15 @@ import (
 	"fmt"
 	"io/ioutil"
 	"log"
-	"regxp"
+	// "regexp"
 	"strings"
 )
 
 const (
-	CHINA   = "000000" //全国
-	PATTERN = regxp.MustCompile(`([0-9]{2})([0-9]{2})([0-9]{2})`)
+	CHINA = "000000" //全国
 )
+
+// var PATTERN = regexp.MustCompile(`([0-9]{2})([0-9]{2})([0-9]{2})`)
 
 type node struct {
 	Id             string `json:"id"`
@@ -20,7 +21,7 @@ type node struct {
 	SensitiveAreas bool   `json:"sensitive_areas"`
 }
 
-var cities map[string]node
+var cities map[string][]node
 
 func Province(code string) string {
 	// match(code)[1].ljust(6, '0')
@@ -28,7 +29,7 @@ func Province(code string) string {
 }
 
 func City(code string) string {
-	return fmt.Sprintf("%v00", code[0:5])
+	return fmt.Sprintf("%v00", code[0:4])
 }
 
 func District(code string) string {
@@ -49,8 +50,8 @@ func Get(code string, prependParent bool) string {
 			parentCode := Province(code)
 			area = getProvince(parentCode) + area
 		} else {
-			cityCode := City(code)
 			provinceCode := Province(code)
+			cityCode := City(code)
 			area = getProvince(provinceCode) + getCity(cityCode) + area
 		}
 	}
@@ -76,6 +77,8 @@ func getProvince(code string) string {
 			return province.Text
 		}
 	}
+
+	return ""
 }
 
 func getCity(code string) string {
@@ -84,6 +87,8 @@ func getCity(code string) string {
 			return province.Text
 		}
 	}
+
+	return ""
 }
 
 func getDistrict(code string) string {
@@ -92,6 +97,8 @@ func getDistrict(code string) string {
 			return province.Text
 		}
 	}
+
+	return ""
 }
 
 func init() {

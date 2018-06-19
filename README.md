@@ -1,0 +1,1 @@
+The go implementation of saberma/china_city, which is wrote by ruby, https://github.com/saberma/china_city.

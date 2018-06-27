@@ -18,9 +18,9 @@ const (
 type node struct {
 	Id             string           `json:"id"`
 	Text           string           `json:"text"`
-	SensitiveAreas bool             `json:"sensitive_areas"`
+	SensitiveAreas bool             `json:"-"`
 	IndexChildren  map[string]*node `json:"-"`
-	Children       []*node          `json:"children"`
+	Children       []*node          `json:"children,omitempty"`
 }
 
 func (n node) WithoutChildren() node {

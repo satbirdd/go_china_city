@@ -16,11 +16,11 @@ const (
 // var PATTERN = regexp.MustCompile(`([0-9]{2})([0-9]{2})([0-9]{2})`)
 
 type node struct {
-	Id             string `json:"id"`
-	Text           string `json:"text"`
-	SensitiveAreas bool   `json:"sensitive_areas"`
-	IndexChildren  map[string]*node
-	Children       []*node
+	Id             string           `json:"id"`
+	Text           string           `json:"text"`
+	SensitiveAreas bool             `json:"sensitive_areas"`
+	IndexChildren  map[string]*node `json:"-"`
+	Children       []*node          `json:"children"`
 }
 
 func (n node) WithoutChildren() node {
@@ -191,11 +191,14 @@ func init() {
 	for i, province := range flatCities["province"] {
 		cities[province.Id] = &flatCities["province"][i]
 		cities[province.Id].IndexChildren = map[string]*node{}
+		cities[province.Id].Children = []*node{}
 	}
 
 	for i, city := range flatCities["city"] {
 		pCode := Province(city.Id)
 		cities[pCode].IndexChildren[city.Id] = &flatCities["city"][i]
+		cities[pCode].Children = append(cities[pCode].Children, &flatCities["city"][i])
+
 		cities[pCode].IndexChildren[city.Id].IndexChildren = map[string]*node{}
 	}
 
@@ -203,6 +206,8 @@ func init() {
 		pCode := Province(district.Id)
 		cCode := City(district.Id)
 		cities[pCode].IndexChildren[cCode].IndexChildren[district.Id] = &flatCities["district"][i]
+		cities[pCode].IndexChildren[cCode].Children = append(cities[pCode].IndexChildren[cCode].Children, &flatCities["district"][i])
+
 		cities[pCode].IndexChildren[cCode].IndexChildren[district.Id].IndexChildren = map[string]*node{}
 	}
 
@@ -211,5 +216,6 @@ func init() {
 		cCode := City(street.Id)
 		dCode := District(street.Id)
 		cities[pCode].IndexChildren[cCode].IndexChildren[dCode].IndexChildren[street.Id] = &flatCities["street"][i]
+		cities[pCode].IndexChildren[cCode].IndexChildren[dCode].Children = append(cities[pCode].IndexChildren[cCode].IndexChildren[dCode].Children, &flatCities["street"][i])
 	}
 }

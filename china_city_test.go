@@ -63,8 +63,8 @@ func TestGet(t *testing.T) {
 }
 
 func TestList(t *testing.T) {
-	code := "110000"
-	list := List(&code, false)
+	code := "110100"
+	list := List(&code, true)
 	data, _ := json.Marshal(list)
-	fmt.Print("=== %v", string(data))
+	fmt.Printf("%v", string(data))
 }

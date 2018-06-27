@@ -1,6 +1,7 @@
 package go_china_city
 
 import (
+	"fmt"
 	"testing"
 )
 
@@ -57,5 +58,11 @@ func TestGet(t *testing.T) {
 	p2s := Get("110101", false)
 	if p2s != "东城区" {
 		t.Errorf("district extract error, should be %v, got %v", "东城区", p2s)
+	}
+}
+
+func TestList(t *testing.T) {
+	for _, i := range List(nil, true) {
+		fmt.Printf("list: %v\n", *i)
 	}
 }

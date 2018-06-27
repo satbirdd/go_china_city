@@ -1,6 +1,7 @@
 package go_china_city
 
 import (
+	"encoding/json"
 	"fmt"
 	"testing"
 )
@@ -62,7 +63,8 @@ func TestGet(t *testing.T) {
 }
 
 func TestList(t *testing.T) {
-	for _, i := range List(nil, true) {
-		fmt.Printf("list: %v\n", *i)
-	}
+	code := "110000"
+	list := List(&code, false)
+	data, _ := json.Marshal(list)
+	fmt.Print("=== %v", string(data))
 }

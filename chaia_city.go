@@ -19,6 +19,7 @@ type node struct {
 	Id             string `json:"id"`
 	Text           string `json:"text"`
 	SensitiveAreas bool   `json:"sensitive_areas"`
+	IndexChildren  map[string]*node
 	Children       []*node
 }
 
@@ -30,7 +31,7 @@ func (n node) WithoutChildren() node {
 	}
 }
 
-var cities map[string][]node
+var cities = map[string]*node{}
 
 func Province(code string) string {
 	// match(code)[1].ljust(6, '0')
@@ -42,12 +43,8 @@ func City(code string) string {
 }
 
 func District(code string) string {
-	return code
+	return code[0:6]
 }
-
-// func match(code string) string {
-// 	PATTERN.FindStringSubmatch(code)
-// }
 
 func Get(code string, prependParent bool) string {
 	area := getArea(code)
@@ -89,46 +86,38 @@ func List(parentId *string, showAll bool) []*node {
 	districtId := District(parentCode)
 
 	if parentCode == "000000" {
-		for _, prov := range cities["province"] {
+		for _, prov := range cities {
 			if showAll {
-				newP := prov
-				list = append(list, &newP)
+				// newP := *prov
+				list = append(list, prov)
 			} else {
 				singleProv := prov.WithoutChildren()
 				list = append(list, &singleProv)
 			}
 		}
 	} else if parentCode == provinceId {
-		for _, prov := range cities["province"] {
-			if prov.Id == parentCode {
-				if showAll {
-					list = prov.Children
-				} else {
-					for _, child := range prov.Children {
-						singleProv := child.WithoutChildren()
-						list = append(list, &singleProv)
-					}
-				}
+		for _, city := range cities[provinceId].IndexChildren {
+			if showAll {
+				// newP := *city
+				list = append(list, city)
+			} else {
+				singleProv := city.WithoutChildren()
+				list = append(list, &singleProv)
 			}
 		}
 	} else if parentCode == cityId {
-		for _, city := range cities["city"] {
-			if city.Id == parentCode {
-				if showAll {
-					list = city.Children
-				} else {
-					for _, child := range city.Children {
-						singleDistrict := child.WithoutChildren()
-						list = append(list, &singleDistrict)
-					}
-				}
+		for _, district := range cities[provinceId].IndexChildren[cityId].IndexChildren {
+			if showAll {
+				// newP := *prov
+				list = append(list, district)
+			} else {
+				singleProv := district.WithoutChildren()
+				list = append(list, &singleProv)
 			}
 		}
 	} else if parentCode == districtId {
-		for _, district := range cities["district"] {
-			if district.Id == parentCode {
-				list = district.Children
-			}
+		for _, street := range cities[provinceId].IndexChildren[cityId].IndexChildren[districtId].IndexChildren {
+			list = append(list, street)
 		}
 	}
 
@@ -170,33 +159,21 @@ func getArea(code string) string {
 }
 
 func getProvince(code string) string {
-	for _, province := range cities["province"] {
-		if province.Id == code {
-			return province.Text
-		}
-	}
-
-	return ""
+	province := cities[code]
+	return province.Text
 }
 
 func getCity(code string) string {
-	for _, province := range cities["city"] {
-		if province.Id == code {
-			return province.Text
-		}
-	}
-
-	return ""
+	pCode := Province(code)
+	city := cities[pCode].IndexChildren[code]
+	return city.Text
 }
 
 func getDistrict(code string) string {
-	for _, province := range cities["district"] {
-		if province.Id == code {
-			return province.Text
-		}
-	}
-
-	return ""
+	pCode := Province(code)
+	cCode := City(code)
+	district := cities[pCode].IndexChildren[cCode].IndexChildren[code]
+	return district.Text
 }
 
 func init() {
@@ -205,35 +182,34 @@ func init() {
 		log.Fatalf("china city init failed, %v", err)
 	}
 
-	err = json.Unmarshal(data, &cities)
+	var flatCities map[string][]node
+	err = json.Unmarshal(data, &flatCities)
 	if err != nil {
 		log.Fatalf("china city init failed, %v", err)
 	}
 
-	for i, street := range cities["street"] {
-		dCode := street.Id[0:6]
-		for j, district := range cities["district"] {
-			if district.Id == dCode {
-				cities["district"][j].Children = append(district.Children, &cities["street"][i])
-			}
-		}
+	for i, province := range flatCities["province"] {
+		cities[province.Id] = &flatCities["province"][i]
+		cities[province.Id].IndexChildren = map[string]*node{}
 	}
 
-	for i, district := range cities["district"] {
-		cCode := fmt.Sprintf("%v00", district.Id[0:4])
-		for j, city := range cities["city"] {
-			if city.Id == cCode {
-				cities["city"][j].Children = append(city.Children, &cities["district"][i])
-			}
-		}
+	for i, city := range flatCities["city"] {
+		pCode := Province(city.Id)
+		cities[pCode].IndexChildren[city.Id] = &flatCities["city"][i]
+		cities[pCode].IndexChildren[city.Id].IndexChildren = map[string]*node{}
 	}
 
-	for i, city := range cities["city"] {
-		pCode := fmt.Sprintf("%v0000", city.Id[0:2])
-		for j, province := range cities["province"] {
-			if province.Id == pCode {
-				cities["province"][j].Children = append(province.Children, &cities["city"][i])
-			}
-		}
+	for i, district := range flatCities["district"] {
+		pCode := Province(district.Id)
+		cCode := City(district.Id)
+		cities[pCode].IndexChildren[cCode].IndexChildren[district.Id] = &flatCities["district"][i]
+		cities[pCode].IndexChildren[cCode].IndexChildren[district.Id].IndexChildren = map[string]*node{}
+	}
+
+	for i, street := range flatCities["street"] {
+		pCode := Province(street.Id)
+		cCode := City(street.Id)
+		dCode := District(street.Id)
+		cities[pCode].IndexChildren[cCode].IndexChildren[dCode].IndexChildren[street.Id] = &flatCities["street"][i]
 	}
 }

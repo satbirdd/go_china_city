@@ -191,7 +191,7 @@ func getDistrict(code string) string {
 }
 
 func init() {
-	data, err := ioutil.ReadFile("./db/area.json")
+	data, err := ioutil.ReadFile("./data/area.json")
 	if err != nil {
 		log.Fatalf("china city init failed, %v", err)
 	}

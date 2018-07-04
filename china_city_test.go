@@ -68,3 +68,9 @@ func TestList(t *testing.T) {
 	data, _ := json.Marshal(list)
 	fmt.Printf("%v", string(data))
 }
+
+func TestDistricts(t *testing.T) {
+	for _, x := range AllDistricts() {
+		fmt.Printf("distircts: \n%v", x.Text)
+	}
+}

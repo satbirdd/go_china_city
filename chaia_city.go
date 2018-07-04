@@ -124,6 +124,20 @@ func List(parentId *string, showAll bool) []*node {
 	return list
 }
 
+func AllDistricts() []*node {
+	result := []*node{}
+
+	for _, p := range cities {
+		for _, c := range p.Children {
+			for _, d := range c.Children {
+				result = append(result, d)
+			}
+		}
+	}
+
+	return result
+}
+
 // func Code(area string) (string, error) {
 // 	for _, province := range cities["province"] {
 // 		if province.Text == area {

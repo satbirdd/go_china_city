@@ -3,7 +3,7 @@ package go_china_city
 import (
 	"encoding/json"
 	"fmt"
-	"io/ioutil"
+	// "io/ioutil"
 	"log"
 	// "regexp"
 	"strings"
@@ -191,7 +191,8 @@ func getDistrict(code string) string {
 }
 
 func init() {
-	data, err := ioutil.ReadFile("./data/area.json")
+	// data, err := ioutil.ReadFile("./data/area.json")
+	data, err := Asset("data/area.json")
 	if err != nil {
 		log.Fatalf("china city init failed, %v", err)
 	}
